@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "langserve-ollama"
+version = "0.1.0"
+description = ""
+authors = ["teddy <teddylee777@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.x"
+langserve = "^0.0.51"
+streamlit = "^1.33.0"
+fastapi = "^0.110.1"
+sse-starlette = "^2.1.0"
+unstructured = {extras = ["pdf"], version = "^0.13.2"}
+faiss-cpu = "^1.8.0"
+langchainhub = "^0.1.15"
+httpx-sse = "^0.4.0"
+sentence-transformers = "^2.6.1"
+ipykernel = "^6.29.5"
+langchain-teddynote = "0.3.24"
+langchain-core = ">=0.3.20,<0.4.0"
+langchain-ollama = "^0.2.1"
+langchain-openai = "^0.2.11"
+langchain-community = "^0.3.10"
+python-dotenv = "^1.0.1"
+jupyter = "^1.1.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.9.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

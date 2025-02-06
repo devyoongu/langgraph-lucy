@@ -1,0 +1,30 @@
+import streamlit as st
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_teddynote.models import LLMs
+from langchain_teddynote.models import get_model_name
+# 모델 이름 가져오기
+MODEL_NAME = get_model_name(LLMs.GPT4o_MINI)
+
+# 사용할 retriever 타입 정의
+ALLOWED_TYPES = {"document", "department"}
+
+
+def get_session_history(session_id):
+    print(f"Received session_id: {session_id}")
+
+    if "store" not in st.session_state:
+        print("Initializing session_state store")
+        st.session_state["store"] = {}
+
+    if session_id not in st.session_state["store"]:
+        # print(
+        #     f"Session ID '{session_id}' not found in store, initializing new ChatMessageHistory."
+        # )
+        st.session_state["store"][session_id] = ChatMessageHistory()
+
+        return st.session_state["store"][session_id]
+    else:
+        storeValue = st.session_state["store"][session_id]
+        # print(f"Session ID '{session_id}' found in store.")
+        # print(f"Stored sessions: {storeValue}")
+        return storeValue
