@@ -4,13 +4,12 @@ from langgraph.errors import GraphRecursionError
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 import streamlit as st
-from retrievers import init_retriever
+from retriever import init_retriever
 from states import GraphState
 from rag import create_rag_chain
 from nodes import *
 
 
-DB_INDEX = "LANGCHAIN_DB_INDEX"
 
 
 def create_graph():
@@ -28,7 +27,7 @@ def create_graph():
     workflow.add_node("retrieve", RetrieveNode(retriever))  # 문서 검색
     workflow.add_node("grade_documents", FilteringDocumentsNode())  # 문서 평가
     workflow.add_node(
-        "general_answer", GeneralAnswerNode(ChatOpenAI(model="gpt-4o", temperature=0))
+        "general_answer", GeneralAnswerNode(ChatOpenAI(model="gpt-4o-mini", temperature=0))
     )  # 일반 답변 생성
     workflow.add_node("rag_answer", RagAnswerNode(rag_chain))  # RAG 답변 생성
 
