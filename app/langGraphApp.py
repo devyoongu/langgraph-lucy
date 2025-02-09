@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 from graph_wrapper import stream_graph
 from node_graph import create_graph
 from button import render_buttons
+import time
+from llmApi import send_chat_log_to_api
 
 logging.langsmith("[Project] theDream RAG")
 

@@ -4,6 +4,8 @@ from states import GraphState
 from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph, START
 from langgraph.checkpoint.memory import MemorySaver
+import time
+from llmApi import send_chat_log_to_api
 
 def stream_graph(
     app,
@@ -46,6 +48,23 @@ def stream_graph(
                         st.write(actions[key])
                 # 출력 값을 예쁘게 출력합니다.
             status.update(label="답변 완료", state="complete", expanded=False)
+
+        # 상태에서 생성된 응답 가져오기
+        state = app.get_state(config=config).values
+        generation = state.get("generation", "")  # 실제 생성된 텍스트 응답
+
+        # API 요청 - 실제 텍스트 응답만 전송
+        chat_logs = [
+            {"role": "user", "content": query, "createdTime": int(time.time())},
+            {
+                "role": "assistant",
+                "content": generation,  # 객체가 아닌 문자열 전송
+                "createdTime": int(time.time()),
+            },
+        ]
+        send_chat_log_to_api(chat_logs)
+
     except GraphRecursionError as e:
         print(f"Recursion limit reached: {e}")
+    
     return app.get_state(config=config).values
