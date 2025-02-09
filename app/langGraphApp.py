@@ -36,12 +36,23 @@ selected_category = render_buttons()
 # 파일이 업로드 되었을 때
 if uploaded_file:
     process_file(uploaded_file, "document")
-    # 파일 업로드 후 사이드바 상태 갱신
-    st.rerun()  # Streamlit 앱 새로고침
+    # 파일 업로드 후 세션 상태 갱신
+    if "last_uploaded_file" not in st.session_state:
+        st.session_state.last_uploaded_file = None
+    
+    if st.session_state.last_uploaded_file != uploaded_file.name:
+        st.session_state.last_uploaded_file = uploaded_file.name
+        st.rerun()
+
 elif uploaded_dept_file:
     process_file(uploaded_dept_file, "department")
-    # 파일 업로드 후 사이드바 상태 갱신
-    st.rerun()  # Streamlit 앱 새로고침
+    # 파일 업로드 후 세션 상태 갱신
+    if "last_uploaded_dept_file" not in st.session_state:
+        st.session_state.last_uploaded_dept_file = None
+    
+    if st.session_state.last_uploaded_dept_file != uploaded_dept_file.name:
+        st.session_state.last_uploaded_dept_file = uploaded_dept_file.name
+        st.rerun()
 
 # 이전 대화를 출력
 def print_messages():
