@@ -36,8 +36,12 @@ selected_category = render_buttons()
 # 파일이 업로드 되었을 때
 if uploaded_file:
     process_file(uploaded_file, "document")
+    # 파일 업로드 후 사이드바 상태 갱신
+    st.rerun()  # Streamlit 앱 새로고침
 elif uploaded_dept_file:
     process_file(uploaded_dept_file, "department")
+    # 파일 업로드 후 사이드바 상태 갱신
+    st.rerun()  # Streamlit 앱 새로고침
 
 # 이전 대화를 출력
 def print_messages():
