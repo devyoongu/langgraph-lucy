@@ -20,17 +20,9 @@ def initialize_environment():
     """
     초기 환경 설정 및 디렉토리 생성
     """
-    # 캐시 디렉토리 생성
-    if not os.path.exists(".cache"):
-        os.mkdir(".cache")
-
-    # 파일 업로드 전용 폴더
-    if not os.path.exists(".cache/files"):
-        os.mkdir(".cache/files")
-
     # 임베딩 저장 폴더
-    if not os.path.exists(".cache/embeddings"):
-        os.mkdir(".cache/embeddings")
+    if not os.path.exists("./upload"):
+        os.mkdir("./upload")
 
     if "chain" not in st.session_state:
         # 아무런 파일을 업로드 하지 않을 경우
