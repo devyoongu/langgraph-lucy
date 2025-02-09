@@ -2,6 +2,8 @@ import streamlit as st
 import requests
 import os
 from retriever import EMBEDDINGS_RECORD_FILE
+from langchain_teddynote.graphs import visualize_graph
+from langgraph.graph import StateGraph
 
 
 def render_sidebar():
@@ -35,5 +37,34 @@ def render_sidebar():
         else:
             st.info("아직 임베딩된 파일이 없습니다.")
 
+        # 구분선 추가
+        st.divider()
+        
+        # 그래프 시각화 버튼
+        if st.button("🔍 그래프 플로우 보기"):
+            if "graph" in st.session_state:
+                # 메인 영역에 그래프 표시
+                st.write("### 🎯 RAG 플로우 다이어그램")
+                graph = st.session_state["graph"]
+                
+                try:
+                    # visualize_graph 함수를 통해 이미지 데이터 직접 가져오기
+                    image_data = graph.get_graph().draw_mermaid_png(
+                        background_color="white"
+                    )
+                    if image_data:
+                        st.image(image_data, caption="RAG 플로우 다이어그램")
+                    else:
+                        st.warning("그래프 이미지를 생성할 수 없습니다.")
+                except Exception as e:
+                    st.error(f"그래프 시각화 중 오류 발생: {str(e)}")
+                    # 대체 표시 방법: 노드와 엣지 정보 JSON으로 표시
+                    st.json({
+                        "nodes": ["START", "retrieve", "grade_documents", "generate", 
+                                "query_rewrite", "web_search_node", "END"],
+                        "flow": "START -> retrieve -> grade_documents -> [generate/query_rewrite] -> END"
+                    })
+            else:
+                st.warning("그래프가 아직 초기화되지 않았습니다.")
 
         return uploaded_file, uploaded_dept_file
