@@ -26,7 +26,8 @@ def stream_graph(
 
     # app.stream을 통해 입력된 메시지에 대한 출력을 스트리밍합니다.
     actions = {
-        "retrieve": "🔍 문서를 조회하는 중입니다.",
+        "route_retriever": "🧑‍💻 질문의 의도를 분석하는 중입니다.",
+        "retrieve": "🔍 embedding 문서를 조회하는 중입니다.",
         "grade_documents": "👀 조회한 문서 중 중요한 내용을 추려내는 중입니다.",
         "rag_answer": "🔥 문서를 기반으로 답변을 생성하는 중입니다.",
         "general_answer": "🔥 문서를 기반으로 답변을 생성하는 중입니다.",

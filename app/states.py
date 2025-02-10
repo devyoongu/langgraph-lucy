@@ -7,4 +7,6 @@ class GraphState(TypedDict):
     question: Annotated[str, "The question to answer"]
     generation: Annotated[str, "The generation from the LLM"]
     web_search: Annotated[str, "Whether to add search"]
+    retriever_type: Annotated[str, "The type of retriever to use"]
     documents: Annotated[List[str], "The documents retrieved"]
+    sql_query: Annotated[str, "The SQL query to execute"]

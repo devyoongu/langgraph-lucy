@@ -1,41 +1,37 @@
 from typing import Literal
-
-from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
-from langchain_teddynote.models import get_model_name, LLMs
+from langchain_core.prompts import ChatPromptTemplate
+from chainUtils import MODEL_NAME
 
-# 최신 LLM 모델 이름 가져오기
-MODEL_NAME = get_model_name(LLMs.GPT4o_MINI)
+# ✅ LLM 인스턴스 생성
+llm = ChatOpenAI(model=MODEL_NAME, temperature=0)
 
-
-# 사용자 쿼리를 가장 관련성 높은 데이터 소스로 라우팅하는 데이터 모델
+# ✅ 질문을 라우팅할 데이터 모델 정의
 class RouteQuery(BaseModel):
-    """Route a user query to the most relevant datasource."""
+    """질문을 가장 관련성이 높은 벡터스토어로 라우팅"""
 
-    # 데이터 소스 선택을 위한 리터럴 타입 필드
-    datasource: Literal["vectorstore", "web_search"] = Field(
-        ...,
-        description="Given a user question choose to route it to web search or a vectorstore.",
+    # 질문이 벡터스토어("document", "department") 중 어디로 가야 하는지 판단
+    datasource: Literal["document", "department"] = Field(
+        ..., description="Route the question to the appropriate vectorstore."
     )
 
-
-# LLM 초기화 및 함수 호출을 통한 구조화된 출력 생성
-llm = ChatOpenAI(model=MODEL_NAME, temperature=0)
+# ✅ 구조화된 LLM 라우터 생성
 structured_llm_router = llm.with_structured_output(RouteQuery)
 
-# 시스템 메시지와 사용자 질문을 포함한 프롬프트 템플릿 생성
-system = """You are an expert at routing a user question to a vectorstore or web search.
-The vectorstore contains documents related to DEC 2023 AI Brief Report(SPRI) with Samsung Gause, Anthropic, etc.
-Use the vectorstore for questions on these topics. Otherwise, use web-search."""
+# ✅ LLM 기반 질문 분석 프롬프트 정의
+system_prompt = """You are an expert at routing user questions to the correct knowledge source.
+- If the question is related to organizational structure, department names, or contact details, use "department".
+- If the question is related to general document information, laws, or reports, use "document".
+Return only "document" or "department"."""
 
-# Routing 을 위한 프롬프트 템플릿 생성
+# ✅ 프롬프트 템플릿 생성
 route_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", system),
+        ("system", system_prompt),
         ("human", "{question}"),
     ]
 )
 
-# 프롬프트 템플릿과 구조화된 LLM 라우터를 결합하여 질문 라우터 생성
+# ✅ 프롬프트와 LLM 라우터 결합
 question_router = route_prompt | structured_llm_router
