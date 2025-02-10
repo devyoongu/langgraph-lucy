@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "langserve-ollama"
+name = "langchain-lucy"
 version = "0.1.0"
 description = ""
-authors = ["teddy <teddylee777@gmail.com>"]
+authors = ["teddy <lee36656@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
 
@@ -18,14 +18,13 @@ langchainhub = "^0.1.15"
 httpx-sse = "^0.4.0"
 sentence-transformers = "^2.6.1"
 ipykernel = "^6.29.5"
-langchain-teddynote = "0.3.24"
+langchain-teddynote = "^0.3.37"
 langchain-core = ">=0.3.20,<0.4.0"
 langchain-ollama = "^0.2.1"
 langchain-openai = "^0.2.11"
 langchain-community = "^0.3.10"
 python-dotenv = "^1.0.1"
 jupyter = "^1.1.1"
-
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.9.4"

@@ -58,12 +58,6 @@ def render_sidebar():
                         st.warning("그래프 이미지를 생성할 수 없습니다.")
                 except Exception as e:
                     st.error(f"그래프 시각화 중 오류 발생: {str(e)}")
-                    # 대체 표시 방법: 노드와 엣지 정보 JSON으로 표시
-                    st.json({
-                        "nodes": ["START", "retrieve", "grade_documents", "generate", 
-                                "query_rewrite", "web_search_node", "END"],
-                        "flow": "START -> retrieve -> grade_documents -> [generate/query_rewrite] -> END"
-                    })
             else:
                 st.warning("그래프가 아직 초기화되지 않았습니다.")
 

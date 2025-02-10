@@ -2,7 +2,6 @@ from langchain_core.runnables import RunnableConfig
 from typing import List, Annotated, TypedDict
 from langgraph.graph import StateGraph, START, END
 from langchain_core.documents import Document
-from langchain_openai import ChatOpenAI
 from retriever import load_existing_retriever
 from questionRetrieval import retrieval_grader
 from queryRewrite import question_rewriter
@@ -12,13 +11,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from states import GraphState
 
 
-# region 노드 정의 
+# region 노드 정의
 # 문서 검색 노드
 def retrieve(state: GraphState):
     print("\n==== RETRIEVE ====\n")
     question = state["question"]
 
-    print(f"question is {question}")
+    print(f"retrieve question is {question}")
 
     pdf_retriever = load_existing_retriever("document")
     # 문서 검색 수행
@@ -38,13 +37,13 @@ def generate(state: GraphState):
 
     # RAG를 사용한 답변 생성
     generation = rag_chain.invoke({"context": documents, "question": question})
-    
+
     # metadata 체크 추가
-    if documents and hasattr(documents[0], 'metadata'):
-        source = documents[0].metadata.get('source', 'unknown')
-        page = documents[0].metadata.get('page', 1)
+    if documents and hasattr(documents[0], "metadata"):
+        source = documents[0].metadata.get("source", "unknown")
+        page = documents[0].metadata.get("page", 1)
         print(f"\n**Source**\n- {source} (page {page})")
-    
+
     # 응답 반환
     return {"generation": generation}
 
@@ -100,32 +99,29 @@ def web_search(state: GraphState):
     question = state["question"]
     documents = state["documents"]
     print(f"web_search question is {question}")
-    
+
     # 웹 검색 수행
     docs = web_search_tool.invoke({"query": question})
-    
+
     # 각 검색 결과 출력
     print("\nSearch Results:")
     for i, doc in enumerate(docs):
         print(f"\nResult {i+1}:")
         print(f"Content: {doc['content']}")
-        if 'metadata' in doc:
+        if "metadata" in doc:
             print(f"Metadata: {doc['metadata']}")
-    
+
     # 검색 결과를 문서 형식으로 변환
     web_results = "\n".join([d["content"] for d in docs])
     web_results = Document(
-        page_content=web_results,
-        metadata={
-            "source": "web_search",
-            "page": 1
-        }
+        page_content=web_results, metadata={"source": "web_search", "page": 1}
     )
     documents.append(web_results)
 
     return {"documents": documents}
 
-# 조건부 엣지 노드 
+
+# 조건부 엣지 노드
 def decide_to_generate(state: GraphState):
     # 평가된 문서를 기반으로 다음 단계 결정
     print("==== [ASSESS GRADED DOCUMENTS] ====")
@@ -144,13 +140,16 @@ def decide_to_generate(state: GraphState):
         # 관련 문서가 존재하므로 답변 생성 단계(generate) 로 진행
         print("==== [DECISION: GENERATE] ====")
         return "generate"
-# endregion 
 
-### 그래프 생성 
+
+# endregion
+
+
+### 그래프 생성
 def create_graph():
     # 메모리 체크포인터 생성
     memory_checkpointer = MemorySaver()
-    
+
     # 그래프 상태 초기화 (checkpointer 제거)
     workflow = StateGraph(GraphState)
 

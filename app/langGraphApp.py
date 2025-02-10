@@ -39,7 +39,7 @@ if uploaded_file:
     # 파일 업로드 후 세션 상태 갱신
     if "last_uploaded_file" not in st.session_state:
         st.session_state.last_uploaded_file = None
-    
+
     if st.session_state.last_uploaded_file != uploaded_file.name:
         st.session_state.last_uploaded_file = uploaded_file.name
         st.rerun()
@@ -49,24 +49,28 @@ elif uploaded_dept_file:
     # 파일 업로드 후 세션 상태 갱신
     if "last_uploaded_dept_file" not in st.session_state:
         st.session_state.last_uploaded_dept_file = None
-    
+
     if st.session_state.last_uploaded_dept_file != uploaded_dept_file.name:
         st.session_state.last_uploaded_dept_file = uploaded_dept_file.name
         st.rerun()
+
 
 # 이전 대화를 출력
 def print_messages():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
 
+
 # 이전 대화 기록 출력
 print_messages()
 # 사용자의 입력
 user_input = st.chat_input("궁금한 내용을 물어보세요!")
 
+
 # 새로운 메시지를 추가
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
+
 
 # 체인 생성
 if "graph" not in st.session_state:
@@ -76,7 +80,7 @@ if "graph" not in st.session_state:
 if user_input or selected_category:
     # 실제 처리할 입력 결정
     input_text = user_input if user_input else selected_category
-    
+
     # 사용자의 입력을 화면에 표시
     st.chat_message("user", avatar="🙎‍♂️").write(input_text)
     # 세션 상태에서 그래프 객체를 가져옴

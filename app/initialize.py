@@ -34,8 +34,6 @@ def initialize_environment():
 
     if "chat_thread_id" not in st.session_state:
         chat_logs = []
-        # 임시 주석
-        # send_chat_log_to_api(chat_logs)
         st.session_state["chat_thread_id"] = random_uuid()
 
 
