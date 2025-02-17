@@ -21,9 +21,31 @@ structured_llm_router = llm.with_structured_output(RouteQuery)
 
 # ✅ LLM 기반 질문 분석 프롬프트 정의
 system_prompt = """You are an expert at routing user questions to the correct knowledge source.
-- If the question is related to organizational structure, department names, or contact details, use "department".
-- If the question is related to general document information, laws, or reports, use "document".
-Return only "document" or "department"."""
+
+Use "department" ONLY for questions about:
+- Organization structure (조직도)
+- Employee information (직원 정보)
+- Department names and roles (부서명과 역할)
+- Contact details (연락처)
+- Job titles and positions (직책과 직위)
+
+Use "document" for all other questions, including:
+- Company policies (회사 정책)
+- Meeting information (회의 정보)
+- Event details (행사 정보)
+- General documents (일반 문서)
+- Reports and announcements (보고서와 공지사항)
+- Training materials (교육 자료)
+- Company news (회사 소식)
+
+Return only "document" or "department".
+
+Examples:
+Q: "타운홀 미팅 장소가 어디인가요?" -> document (회의 정보는 document)
+Q: "HR팀 담당자 연락처 알려주세요" -> department (직원 연락처는 department)
+Q: "신입사원 교육 일정이 어떻게 되나요?" -> document (교육 정보는 document)
+Q: "개발팀은 몇 층에 있나요?" -> department (부서 위치는 department)
+"""
 
 # ✅ 프롬프트 템플릿 생성
 route_prompt = ChatPromptTemplate.from_messages(

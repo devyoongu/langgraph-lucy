@@ -49,8 +49,17 @@ def stream_graph(
                         print(f"actions[key] is {actions[key]}")    
                         st.write(actions[key])
                         
-                        # SQL 쿼리 생성 노드에서 쿼리 표시
-                        if key in ["sql_generate", "sql_re_generate"]:
+                        # 라우팅 결과 표시
+                        if key == "route_retriever":
+                            if "retriever_type" in value:
+                                st.write("🎯 선택된 데이터 소스:")
+                                retriever_type = value["retriever_type"]
+                                if retriever_type == "document":
+                                    st.code("📚 문서 데이터베이스 선택", language="plaintext")
+                                else:
+                                    st.code("👥 조직도 데이터베이스 선택", language="plaintext")
+
+                        elif key in ["sql_generate", "sql_re_generate"]:
                             if "sql_query" in value:
                                 st.write("🔍 생성된 SQL 쿼리:")
                                 st.code(value["sql_query"], language="sql")
