@@ -48,7 +48,13 @@ def stream_graph(
                     if key in actions:
                         print(f"actions[key] is {actions[key]}")    
                         st.write(actions[key])
-                # 출력 값을 예쁘게 출력합니다.
+                        
+                        # SQL 쿼리 생성 노드에서 쿼리 표시
+                        if key in ["sql_generate", "sql_re_generate"]:
+                            if "sql_query" in value:
+                                st.write("🔍 생성된 SQL 쿼리:")
+                                st.code(value["sql_query"], language="sql")
+
             status.update(label="답변 완료", state="complete", expanded=False)
 
         # 상태에서 생성된 응답 가져오기
