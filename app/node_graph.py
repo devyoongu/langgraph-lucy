@@ -11,7 +11,9 @@ from langgraph.checkpoint.memory import MemorySaver
 from states import GraphState
 from routeChain import question_router
 from sqlChain import sql_chain
-
+from sqlReWriteChain import re_sql_chain
+from tableChain import table_chain
+from llmApi import call_external_api
 
 # region 노드 정의
 def route_retriever(state: GraphState):
@@ -41,7 +43,7 @@ def retrieve(state: GraphState):
 
 
 def sql_generate(state: GraphState):
-    print("\n==== GENERATE ====\n")
+    print("\n==== SQL GENERATE ====\n")
     question = state["question"]
     documents = state["documents"]
 
@@ -51,7 +53,34 @@ def sql_generate(state: GraphState):
     sql_query = sql_chain.invoke({"context": documents, "question": question})
     print(f"sql_generate sql_query is {sql_query}") 
 
-    return {"generation": sql_query, "sql_query": sql_query}
+    return {"sql_query": sql_query}
+
+def sql_re_generate(state: GraphState):
+    print("\n==== SQL RE-GENERATE ====\n")
+    question = state["question"]
+    documents = state["documents"]
+    sql_query = state["sql_query"]
+    print(f"sql_re_generate target sql_query is {sql_query}")
+
+    # RAG를 통한 SQL 쿼리 생성
+    re_sql_query = re_sql_chain.invoke({"context": documents, "question": question, "previous_query": sql_query})
+    print(f"sql_re_generate re_sql_query is {re_sql_query}")
+
+    return {"sql_query": re_sql_query}
+
+def execute_sql(state: GraphState):
+    print("\n==== EXECUTE SQL ====\n")
+    sql_query = state["sql_query"]
+    print(f"execute_sql sql_query is {sql_query}")
+
+    api_result = call_external_api(sql_query)
+
+    table_query = table_chain.invoke({"data": api_result.get("data", "Fallback data"), "question": state["question"]})
+
+    api_result = api_result.get("data", "Fallback data")
+    print(f"execute_sql api_result is {api_result}")
+
+    return {"generation": table_query, "api_result": api_result}
 
 
 # 답변 생성 노드
@@ -114,7 +143,7 @@ def grade_documents(state: GraphState):
 
 
 # 쿼리 재작성 노드
-def query_rewrite(state: GraphState):
+def question_rewrite(state: GraphState):
     print("\n==== [REWRITE QUERY] ====\n")
     question = state["question"]
     print(f"question is {question}")
@@ -153,18 +182,25 @@ def web_search(state: GraphState):
 
 
 # 조건부 엣지 노드
+# from route_retriever node 
 def decide_to_question_router(state: GraphState):
     print("\n==== [ROUTING QUESTION ROUTER] ====\n")
-
     retriever_type = state["retriever_type"]
-    # 질문 라우팅 결과에 따른 노드 라우팅
-    if retriever_type == "documents":
+    print(f"decide_to_question_router retriever_type is {retriever_type}")
+    
+    # retriever_type에 따른 라우팅
+    if retriever_type == "document":  # "documents"가 아닌 "document"로 수정
         print("==== [ROUTE QUESTION TO grade_documents] ====")
         return "grade_documents"
     elif retriever_type == "department":
         print("==== [ROUTE QUESTION TO sql_generate] ====")
         return "sql_generate"
-
+    else:
+        # 기본값 설정
+        print("==== [ROUTE QUESTION TO grade_documents (default)] ====")
+        return "grade_documents"
+    
+# from grade_documents node 
 def decide_to_generate(state: GraphState):
     # 평가된 문서를 기반으로 다음 단계 결정
     print("==== [ASSESS GRADED DOCUMENTS] ====")
@@ -178,12 +214,24 @@ def decide_to_generate(state: GraphState):
             "==== [DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, QUERY REWRITE] ===="
         )
         # 쿼리 재작성 노드로 라우팅
-        return "query_rewrite"
+        return "question_rewrite"
     else:
         # 관련 문서가 존재하므로 답변 생성 단계(generate) 로 진행
         print("==== [DECISION: GENERATE] ====")
         return "generate"
 
+# from execute_sql node 
+def decide_to_sql_re_generate(state: GraphState):
+    print("==== [ASSESS EXECUTED RE-GENERATE SQL] ====")
+    api_result = state["api_result"]
+    print(f"decide_to_sql_re_generate api_result is {api_result}")
+
+    if len(api_result) == 0:
+        print("==== [DECISION: RE-GENERATE SQL] ====")
+        return "sql_re_generate"
+    else:
+        print("==== [DECISION: END] ====")
+        return "end"  # "execute_sql"에서 "end"로 변경
 
 # endregion
 
@@ -200,14 +248,18 @@ def create_graph():
     workflow.add_node("retrieve", retrieve)
     workflow.add_node("grade_documents", grade_documents)
     workflow.add_node("generate", generate)
-    workflow.add_node("query_rewrite", query_rewrite)
+    workflow.add_node("question_rewrite", question_rewrite)
     workflow.add_node("web_search_node", web_search)
     workflow.add_node("sql_generate", sql_generate)
     workflow.add_node("route_retriever", route_retriever)
+    workflow.add_node("execute_sql", execute_sql)
+    workflow.add_node("sql_re_generate", sql_re_generate)
+
     # 엣지 연결 수정
-    workflow.add_edge(START, "route_retriever") 
+    workflow.add_edge(START, "route_retriever")
     workflow.add_edge("route_retriever", "retrieve")
-    # workflow.add_edge("retrieve", "grade_documents")
+    workflow.add_edge("sql_generate", "execute_sql")
+    workflow.add_edge("sql_re_generate", "execute_sql")
 
     workflow.add_conditional_edges(
         "retrieve",
@@ -223,16 +275,25 @@ def create_graph():
         "grade_documents",
         decide_to_generate,
         {
-            "query_rewrite": "query_rewrite",
+            "question_rewrite": "question_rewrite",
             "generate": "generate",
         },
     )
 
+    # SQL 실행 결과에 따른 조건부 라우팅
+    workflow.add_conditional_edges(
+        "execute_sql",
+        decide_to_sql_re_generate,
+        {
+            "sql_re_generate": "sql_re_generate",
+            "end": END,
+        },
+    )
+
     # 엣지 연결
-    workflow.add_edge("query_rewrite", "web_search_node")
+    workflow.add_edge("question_rewrite", "web_search_node")
     workflow.add_edge("web_search_node", "generate")
     workflow.add_edge("generate", END)
-    workflow.add_edge("sql_generate", END)
 
     # 그래프 컴파일
     app = workflow.compile(checkpointer=memory_checkpointer)

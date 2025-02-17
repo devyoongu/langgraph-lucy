@@ -14,7 +14,7 @@ def stream_graph(
     thread_id: str,
 ):
     config = RunnableConfig(
-        recursion_limit=30, 
+        recursion_limit=10,  # 값을 높여서 충분한 재시도 허용
         configurable={
             "thread_id": thread_id,
             "checkpointer": MemorySaver()
@@ -29,8 +29,10 @@ def stream_graph(
         "route_retriever": "🧑‍💻 질문의 의도를 분석하는 중입니다.",
         "retrieve": "🔍 embedding 문서를 조회하는 중입니다.",
         "grade_documents": "👀 조회한 문서 중 중요한 내용을 추려내는 중입니다.",
+        "sql_generate": "💻 문서를 기반으로 SQL 쿼리를 생성하는 중입니다.",
+        "sql_re_generate": "💻 조회 결과가 없어서 쿼리를 재생성하는 중입니다.",
+        "execute_sql": "🔍  SQL 기반으로 조직도를 조회 중입니다.",
         "rag_answer": "🔥 문서를 기반으로 답변을 생성하는 중입니다.",
-        "general_answer": "🔥 문서를 기반으로 답변을 생성하는 중입니다.",
         "web_search_node": "🛜 웹 검색을 진행하는 중입니다.",
     }
 
@@ -39,7 +41,6 @@ def stream_graph(
         with streamlit_container.status(
             "😊 열심히 생각중 입니다...", expanded=True
         ) as status:
-            st.write("🧑‍💻 질문의 의도를 분석하는 중입니다.")
             for output in app.stream(inputs, config=config):
                 # 출력된 결과에서 키와 값을 순회합니다.
                 for key, value in output.items():

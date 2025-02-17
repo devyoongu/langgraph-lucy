@@ -10,3 +10,4 @@ class GraphState(TypedDict):
     retriever_type: Annotated[str, "The type of retriever to use"]
     documents: Annotated[List[str], "The documents retrieved"]
     sql_query: Annotated[str, "The SQL query to execute"]
+    api_result: Annotated[str, "The result of the API call"]

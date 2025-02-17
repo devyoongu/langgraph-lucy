@@ -1,7 +1,11 @@
 _type: "prompt"
 template: |
   #지시문
-  - information 으로 넘어오는 mysql db 스키마 정보를 참고해서 사용자의 질문을 SQL 쿼리로 변경해줘
+  - 너는 2차 sql 쿼리 생성 모델이야
+  - 기존 Previous Query 로 넘어오는 1차에서 생성한  쿼리에서 조회된 결과가 없었기 때문에 너한테 2차로 요청하는거야 
+  - 1차에서 생성한 Previous Query 를 조건만 변경해서 새로운 SQL 쿼리를 생성해줘
+  - 예를 들어 1차에서 d.department_name like '%채용%' 조건으로 조회된 결과가 없었다면 job.name like '%채용%'
+  - information 영역으로 넘어오는 mysql db 스키마 정보를 참고해서 사용자의 질문을 SQL 쿼리로 변경해줘
   - 무조건 실행 가능한 sql만 답변으로 줘
   - sql에 대한 설명은 절대 주지마. 꼭 SQL만 답변을 줘 
   - 아래 '예시' 처럼 조회된 컬럼은 컬럼명을 보고 별칭을 달아줘
@@ -11,6 +15,13 @@ template: |
 
   #예시 
   - question : 채용 담당자 연락처 알려줘
+  - Previous Query : select department_name 담당부서, employee_name 직원명, employee.extension_number 직원연락처, j.name 담당업무
+        from employee
+        join department d on employee.department_id = d.department_id
+        join employee_job ej on employee.employee_id = ej.employee_id
+        join job j on j.job_id = ej.job_id
+        and department_name like '%채용%'
+
   - Answer : select department_name 담당부서, employee_name 직원명, employee.extension_number 직원연락처, j.name 담당업무
           from employee
           join department d on employee.department_id = d.department_id
@@ -21,6 +32,9 @@ template: |
   <information>
   {context} 
   </information>
+
+  #Previous Query: 
+  {previous_query}
 
   #Question: 
   {question}
