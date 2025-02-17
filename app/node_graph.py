@@ -51,36 +51,65 @@ def sql_generate(state: GraphState):
 
     # RAG를 통한 SQL 쿼리 생성
     sql_query = sql_chain.invoke({"context": documents, "question": question})
-    print(f"sql_generate sql_query is {sql_query}") 
+    print(f"sql_generate sql_query is {sql_query}")
 
-    return {"sql_query": sql_query}
+    # 쿼리 히스토리 관리
+    sql_queries = state.get("sql_queries", [])
+    sql_queries.append(sql_query)
+
+    return {
+        "sql_query": sql_query,
+        "sql_queries": sql_queries
+    }
 
 def sql_re_generate(state: GraphState):
     print("\n==== SQL RE-GENERATE ====\n")
     question = state["question"]
     documents = state["documents"]
     sql_query = state["sql_query"]
+    sql_queries = state.get("sql_queries", [])  # 기존 쿼리 히스토리 가져오기
+    
     print(f"sql_re_generate target sql_query is {sql_query}")
+    print(f"Previous SQL queries: {sql_queries}")
 
-    # RAG를 통한 SQL 쿼리 생성
-    re_sql_query = re_sql_chain.invoke({"context": documents, "question": question, "previous_query": sql_query})
+    # RAG를 통한 SQL 쿼리 재생성
+    re_sql_query = re_sql_chain.invoke({
+        "context": documents, 
+        "question": question,
+        "previous_query": sql_queries
+    })
     print(f"sql_re_generate re_sql_query is {re_sql_query}")
 
-    return {"sql_query": re_sql_query}
+    # 새 쿼리를 히스토리에 추가
+    sql_queries.append(re_sql_query)
+
+    return {
+        "sql_query": re_sql_query,
+        "sql_queries": sql_queries
+    }
 
 def execute_sql(state: GraphState):
     print("\n==== EXECUTE SQL ====\n")
     sql_query = state["sql_query"]
-    print(f"execute_sql sql_query is {sql_query}")
+    sql_queries = state.get("sql_queries", [])
+    
+    # print(f"execute_sql sql_query is {sql_query}")
+    # print(f"SQL query history: {sql_queries}")
 
     api_result = call_external_api(sql_query)
-
-    table_query = table_chain.invoke({"data": api_result.get("data", "Fallback data"), "question": state["question"]})
+    table_query = table_chain.invoke({
+        "data": api_result.get("data", "Fallback data"), 
+        "question": state["question"]
+    })
 
     api_result = api_result.get("data", "Fallback data")
     print(f"execute_sql api_result is {api_result}")
 
-    return {"generation": table_query, "api_result": api_result}
+    return {
+        "generation": table_query, 
+        "api_result": api_result,
+        "sql_queries": sql_queries  # 히스토리 유지
+    }
 
 
 # 답변 생성 노드
@@ -180,7 +209,6 @@ def web_search(state: GraphState):
 
     return {"documents": documents}
 
-
 # 조건부 엣지 노드
 # from route_retriever node 
 def decide_to_question_router(state: GraphState):
@@ -224,15 +252,22 @@ def decide_to_generate(state: GraphState):
 def decide_to_sql_re_generate(state: GraphState):
     print("==== [ASSESS EXECUTED RE-GENERATE SQL] ====")
     api_result = state["api_result"]
+    sql_queries = state.get("sql_queries", [])
+    
     print(f"decide_to_sql_re_generate api_result is {api_result}")
+    print(f"SQL query count: {len(sql_queries)}")
 
-    if len(api_result) == 0:
+    # SQL 쿼리 히스토리가 2개 이상이면 종료
+    if len(sql_queries) >= 2:
+        print("==== [DECISION: END (Max queries reached)] ====")
+        return "end"
+    # API 결과가 비어있으면 재시도
+    elif len(api_result) == 0:
         print("==== [DECISION: RE-GENERATE SQL] ====")
         return "sql_re_generate"
     else:
         print("==== [DECISION: END] ====")
-        return "end"  # "execute_sql"에서 "end"로 변경
-
+        return "end"
 # endregion
 
 

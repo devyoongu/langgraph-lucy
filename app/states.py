@@ -9,5 +9,6 @@ class GraphState(TypedDict):
     web_search: Annotated[str, "Whether to add search"]
     retriever_type: Annotated[str, "The type of retriever to use"]
     documents: Annotated[List[str], "The documents retrieved"]
-    sql_query: Annotated[str, "The SQL query to execute"]
+    sql_query: Annotated[str, "The current SQL query"]
+    sql_queries: Annotated[List[str], "The history of SQL queries"]
     api_result: Annotated[str, "The result of the API call"]
