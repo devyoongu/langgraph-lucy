@@ -1,4 +1,4 @@
-from retriever import load_existing_retriever, process_file
+from retriever import process_file
 from questionRetrieval import retrieval_grader
 from queryRewrite import question_rewriter
 from web_search_tool import web_search_tool

@@ -144,9 +144,11 @@ async def process_file_fastapi(uploaded_file, type: str):
     """
     FastAPI용 파일 처리 메서드
     """
+    print(f"asyncupload type is {type}")
+
     print(f"[INFO] uploaded_file is '{uploaded_file.filename}'.")
     file_path = await save_file_fastapi(uploaded_file)
-    create_retriever(file_path, type)  # type 인자 전달
+    create_retriever(file_path, type)
     print("[INFO] Chain created successfully.")
 
 
