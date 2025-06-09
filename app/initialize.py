@@ -49,6 +49,6 @@ def initialize_session():
         st.session_state["messages"].append(
             ChatMessage(
                 role="assistant",
-                content="안녕하세요! 궁금한 내용을 물어보시면 도움을 드리겠습니다. 😊 아래 질문 유형 중 하나를 선택해 주세요.",
+                content="안녕하세요! 궁금한 내용을 물어보시면 도움을 드리겠습니다요. 😊 아래 질문 유형 중 하나를 선택해 주세요.",
             )
         )
